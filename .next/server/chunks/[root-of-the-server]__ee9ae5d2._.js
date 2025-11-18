@@ -101,15 +101,43 @@ const mod = __turbopack_context__.x("perf_hooks", () => require("perf_hooks"));
 
 module.exports = mod;
 }}),
-"[project]/app/query/route.ts [app-route] (ecmascript)": (function(__turbopack_context__) {
+"[project]/app/query/route.ts [app-route] (ecmascript)": ((__turbopack_context__) => {
+"use strict";
 
-var { g: global, __dirname, m: module, e: exports } = __turbopack_context__;
+var { g: global, __dirname } = __turbopack_context__;
 {
-const e = new Error(`Could not parse module '[project]/app/query/route.ts'
-
-Expression expected`);
-e.code = 'MODULE_UNPARSEABLE';
-throw e;}}),
+__turbopack_context__.s({
+    "GET": (()=>GET)
+});
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$postgres$40$3$2e$4$2e$6$2f$node_modules$2f$postgres$2f$src$2f$index$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/.pnpm/postgres@3.4.6/node_modules/postgres/src/index.js [app-route] (ecmascript)");
+;
+const sql = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f2e$pnpm$2f$postgres$40$3$2e$4$2e$6$2f$node_modules$2f$postgres$2f$src$2f$index$2e$js__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"])(process.env.POSTGRES_URL, {
+    ssl: 'require'
+});
+async function listInvoices() {
+    const data = await sql`
+    SELECT invoices.amount, customers.name
+    FROM invoices
+    JOIN customers ON invoices.customer_id = customers.id
+    WHERE invoices.amount = 666;
+  `;
+    return data;
+}
+async function GET() {
+    try {
+        const invoices = await listInvoices();
+        return new Response(JSON.stringify(invoices), {
+            status: 200
+        });
+    } catch (error) {
+        return new Response(JSON.stringify({
+            error: error.message
+        }), {
+            status: 500
+        });
+    }
+}
+}}),
 
 };
 
