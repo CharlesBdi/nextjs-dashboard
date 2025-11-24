@@ -1,66 +1,60 @@
 'use server';
-import { z } from 'zod';
+
+import { sql } from '@vercel/postgres';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import postgres from 'postgres';
+import { FormSchema, UpdateInvoice } from './schemas';
 
-const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
-
-// 👇 MOVED UP: Define FormSchema first
-const FormSchema = z.object({
-  id: z.string(),
-  customerId: z.string(),
-  amount: z.coerce.number(),
-  status: z.enum(['pending', 'paid']),
-  date: z.string(),
-});
-
-// 👇 Define UpdateInvoice and CreateInvoice after FormSchema
-const UpdateInvoice = FormSchema.omit({ id: true, date: true });
-const CreateInvoice = FormSchema.omit({ id: true, date: true });
-
-
-export async function updateInvoice(id: string, formData: FormData) {
-  const { customerId, amount, status } = UpdateInvoice.parse({
-    customerId: formData.get('customerId'),
-    amount: formData.get('amount'),
-    status: formData.get('status'),
+// CREATE
+export async function createInvoice(data: {
+  customerId: string;
+  amount: number | string;
+  status: 'pending' | 'paid';
+  date: string;
+}) {
+  const validated = FormSchema.parse({
+    customerId: data.customerId,
+    amount: Number(data.amount),
+    status: data.status,
+    date: data.date,
   });
 
-  const amountInCents = amount * 100;
+  await sql`
+    INSERT INTO invoices (customer_id, amount, status, date)
+    VALUES (${validated.customerId}, ${validated.amount}, ${validated.status}, ${validated.date})
+  `;
+
+  revalidatePath('/dashboard/invoices');
+  redirect('/dashboard/invoices');
+}
+
+// UPDATE
+export async function updateInvoice(
+  id: string,
+  data: { customerId: string; amount: number | string; status: 'pending' | 'paid' }
+) {
+  const validated = UpdateInvoice.parse({
+    customerId: data.customerId,
+    amount: Number(data.amount),
+    status: data.status,
+  });
 
   await sql`
     UPDATE invoices
-    SET customer_id = ${customerId}, amount = ${amountInCents}, status = ${status}
+    SET customer_id = ${validated.customerId},
+        amount = ${validated.amount},
+        status = ${validated.status}
     WHERE id = ${id}
   `;
 
   revalidatePath('/dashboard/invoices');
   redirect('/dashboard/invoices');
 }
+
+// DELETE
 export async function deleteInvoice(id: string) {
   await sql`DELETE FROM invoices WHERE id = ${id}`;
+
   revalidatePath('/dashboard/invoices');
-}
-export async function createInvoice(formData: FormData) {
-// **1. Define rawFormData first.**
-const rawFormData = {
-customerId: formData.get('customerId'),
-amount: formData.get('amount'),
-status: formData.get('status'),
-};
-
-// **2. Use rawFormData as the argument for parse.**
-const { customerId, amount, status } = CreateInvoice.parse(rawFormData);
-
-  const amountInCents = amount * 100;
-const date = new Date().toISOString().split('T')[0];
-
-await sql`
-INSERT INTO invoices (customer_id, amount, status, date)
-VALUES (${customerId}, ${amountInCents}, ${status}, ${date})
-`;
-
-revalidatePath('/dashboard/invoices');
-redirect('/dashboard/invoices');
+  redirect('/dashboard/invoices');
 }
