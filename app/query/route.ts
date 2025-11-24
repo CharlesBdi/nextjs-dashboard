@@ -17,6 +17,7 @@ export async function GET() {
     const invoices = await listInvoices();
     return Response.json(invoices);
   } catch (error: unknown) {
+    // Properly handle the unknown error type
     const errorMessage =
       error instanceof Error ? error.message : 'An unknown error occurred';
 
