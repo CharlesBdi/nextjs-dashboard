@@ -16,9 +16,12 @@ export async function GET() {
   try {
     const invoices = await listInvoices();
     return Response.json(invoices);
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const errorMessage =
+      error instanceof Error ? error.message : 'An unknown error occurred';
+
     return Response.json(
-      { error: error?.message || 'An unknown error occurred' },
+      { error: errorMessage },
       { status: 500 }
     );
   }
