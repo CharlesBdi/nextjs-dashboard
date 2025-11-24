@@ -67,3 +67,11 @@ export const generatePagination = (currentPage: number, totalPages: number) => {
     totalPages,
   ];
 };
+// app/lib/utils.ts
+export function handleError(error: unknown, status = 500) {
+  const message = error instanceof Error ? error.message : String(error ?? 'Unknown error');
+  return new Response(
+    JSON.stringify({ error: message }),
+    { status, headers: { 'Content-Type': 'application/json' } }
+  );
+}
