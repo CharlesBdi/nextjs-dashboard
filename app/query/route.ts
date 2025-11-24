@@ -17,8 +17,11 @@ export async function GET() {
     const invoices = await listInvoices();
     return Response.json(invoices);
   } catch (error) {
+    // 💡 FIX: Safely check the type of 'error' before accessing 'message'
+    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
+
     return Response.json(
-      { error: error instanceof Error ? error.message : String(error) },
+      { error: errorMessage },
       { status: 500 }
     );
   }
